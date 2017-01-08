@@ -1,0 +1,96 @@
+Sub transfer_data()
+
+Dim WbName As String
+Dim ProgSheetName As String
+Dim NextRow As Long
+Dim TheRange As Range
+Dim Klinikk As String
+Dim Periode As String
+
+
+'Henter inn gjeldene navn på fil og ark som brukes for å sikre fleksibilitet
+WbName = ActiveWorkbook.Name
+ProgSheetName = ActiveSheet.Name
+
+'Henter inn klinikk og periode
+Klinikk = Range("B1")
+Periode = Range("B2")
+
+'Åpner arbeidsbok som skal ta i mot kopiert range (denne settes opp endelig når plassering er bestemt)
+Workbooks.Open Filename:="D:\OneDrive\Dokumenter\Jobb\Prognoseverktøy\data\data_levert_prognose.xlsx"
+
+'Finner neste ledige rad
+NextRow = Application.WorksheetFunction.CountA(Sheets("data").Columns("A:A")) + 1
+Set TheRange = Worksheets("data").Range("C" & NextRow)
+   
+'Kopierer data fra lokal arbeidsfil til en sentral database
+Workbooks(WbName).Sheets(ProgSheetName).Range("A6:V43").Copy
+TheRange.PasteSpecial xlPasteValues
+Range(TheRange.Offset(0, -1), TheRange.Offset(37, -2)) = Klinikk
+Range(TheRange.Offset(0, -2), TheRange.Offset(37, -2)) = Periode
+
+'Lagrer og lukker datafilen
+ActiveWorkbook.Close savechanges:=True
+
+End Sub
+
+'Henter inn korrigeringer og kommentarer fra forrige måned
+Sub last_month_report()
+
+Dim WbName As String
+Dim ProgSheetName As String
+Dim Klinikk As String
+Dim Periode As String
+
+Dim TestCell As Range
+Dim KontrollCell As Range
+
+Dim NextRow As Long
+Dim TheRange As Range
+
+'Henter inn gjeldene navn på fil og ark som brukes for å sikre fleksibilitet
+WbName = ActiveWorkbook.Name
+ProgSheetName = ActiveSheet.Name
+
+'Henter inn klinikk og periode
+Klinikk = Range("B1")
+Periode = Range("B2")
+
+'Åpner arbeidsbok som skal ta i mot kopiert range (denne settes opp endelig når plassering er bestemt)
+Workbooks.Open Filename:="D:\OneDrive\Dokumenter\Jobb\Prognoseverktøy\data\data_levert_prognose.xlsx"
+
+For Each TestCell In Range("B:B")
+
+    'Finner de rader som har rett Klinikk og Periode
+    If TestCell = Klinikk And TestCell.Offset(0, -1) = Periode Then
+        
+        'Sjekker om det er rapportert noe forrige måned på raden
+        If Not TestCell.Offset(0, 12) = "" Then
+        
+            'Legger inn rapportert forrige måned på rett sted i arbeidsfil
+            For Each KontrollCell In Workbooks(WbName).Sheets(ProgSheetName).Range("A6:A43")
+            
+                If KontrollCell = TestCell.Offset(0, 1) Then
+                
+                    Range(TestCell.Offset(0, 12), TestCell.Offset(0, 13)).Copy
+                    
+                    KontrollCell.Offset(0, 11).PasteSpecial xlPasteValues
+                    
+                End If
+                
+            Next
+            
+            'Her skal det legges inn prosdyre for de andre kolonner
+                
+        End If
+        
+    End If
+    
+Next
+
+'Lagrer og lukker datafilen
+ActiveWorkbook.Close savechanges:=True
+
+
+
+End Sub
